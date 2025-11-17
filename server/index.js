@@ -100,12 +100,6 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5001;
 
-// Only start server if not in serverless environment
-if (process.env.NODE_ENV !== 'production' || !process.env.NETLIFY) {
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
-
-// Export app for serverless deployment
-module.exports = app;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
