@@ -15,6 +15,7 @@ function Discover() {
 
   useEffect(() => {
     fetchProfiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchProfiles = async () => {

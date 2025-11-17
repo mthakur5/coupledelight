@@ -60,6 +60,7 @@ function Messages({ user }) {
         socketRef.current.disconnect();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, activeTab]);
 
   const fetchMessages = async () => {

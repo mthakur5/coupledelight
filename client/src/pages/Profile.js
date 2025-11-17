@@ -35,6 +35,7 @@ function Profile({ user }) {
 
   useEffect(() => {
     fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchProfile = async () => {
@@ -275,9 +276,9 @@ function Profile({ user }) {
               {profile.profilePicture ? (
                 <div className="profile-avatar-with-pic">
                   <div className="avatar-image-container">
-                    <img 
-                      src={`http://localhost:5001${profile.profilePicture}`} 
-                      alt="Profile" 
+                    <img
+                      src={`http://localhost:5001${profile.profilePicture}`}
+                      alt="Profile"
                       className={`profile-avatar-img ${profile.profilePictureBlur ? 'blurred' : ''}`}
                     />
                     <button 
