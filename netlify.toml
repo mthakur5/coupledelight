@@ -1,0 +1,20 @@
+# Netlify Configuration for Backend (Node.js API)
+[build]
+  command = "npm install"
+  functions = "netlify/functions"
+  publish = "public"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Redirect all API requests to serverless functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# Environment variables (Set these in Netlify Dashboard)
+# MONGODB_URI = your_mongodb_connection_string
+# DB_NAME = coupledelight
+# JWT_SECRET = your_secret_key_here
+# CLIENT_URL = your_frontend_url
