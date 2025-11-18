@@ -137,7 +137,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).maxTimeMS(5000);
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -166,7 +166,11 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during login' });
+    console.error('Error details:', error.message);
+    res.status(500).json({ 
+      message: 'Server error during login',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
