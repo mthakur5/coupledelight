@@ -351,6 +351,40 @@
   min-height: 150px;
 }
 
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  cursor: pointer;
+}
+
+.form-group select:focus {
+  outline: none;
+  border-color: #8b7355;
+}
+
+.no-connections-message {
+  padding: 20px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.no-connections-message p {
+  margin: 0 0 8px 0;
+  color: #856404;
+  font-weight: 600;
+}
+
+.no-connections-message small {
+  color: #856404;
+}
+
 .compose-actions {
   display: flex;
   gap: 12px;

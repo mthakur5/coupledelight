@@ -10,6 +10,7 @@ import CreateProfile from './pages/CreateProfile';
 import Discover from './pages/Discover';
 import ProfileView from './pages/ProfileView';
 import Messages from './pages/Messages';
+import Horney from './pages/Horney';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -74,6 +75,10 @@ function App() {
           <Route 
             path="/messages" 
             element={user ? <Messages user={user} /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/horney" 
+            element={user ? <Horney user={user} /> : <Navigate to="/login" />} 
           />
         </Routes>
       </div>

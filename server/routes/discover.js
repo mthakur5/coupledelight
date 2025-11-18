@@ -16,8 +16,9 @@ router.get('/', authMiddleware, async (req, res) => {
     // Build query based on user type
     let query = {
       userId: { $ne: req.userId }, // Exclude own profile
-      isVisible: true,
-      isComplete: true
+      isVisible: true
+      // Temporarily removed isComplete check to show all profiles
+      // isComplete: true
     };
 
     // Apply discovery logic based on account type
@@ -25,20 +26,8 @@ router.get('/', authMiddleware, async (req, res) => {
       // Couples see only singles (boys and girls)
       query.accountType = 'single';
     } else if (currentUser.accountType === 'single') {
-      // Singles see couples and opposite gender singles
-      if (currentProfile && currentProfile.gender === 'male') {
-        // Boys see couples and girls
-        query.$or = [
-          { accountType: 'couple' },
-          { accountType: 'single', gender: { $in: ['female', 'other'] } }
-        ];
-      } else if (currentProfile && currentProfile.gender === 'female') {
-        // Girls see everyone (couples, boys, and girls)
-        // No restriction needed - they see all
-      } else {
-        // For 'other' gender, show couples and all singles
-        // No restriction needed
-      }
+      // Singles see only couples
+      query.accountType = 'couple';
     }
 
     if (lookingFor) {

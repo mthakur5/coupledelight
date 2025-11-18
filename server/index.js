@@ -11,6 +11,7 @@ const discoverRoutes = require('./routes/discover');
 const adminRoutes = require('./routes/admin');
 const uploadRoutes = require('./routes/upload');
 const messagesRoutes = require('./routes/messages');
+const connectionsRoutes = require('./routes/connections');
 
 const app = express();
 const server = http.createServer(app);
@@ -69,6 +70,7 @@ app.use('/api/discover', discoverRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/connections', connectionsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { messagesAPI } from '../utils/api';
+import { messagesAPI, connectionsAPI } from '../utils/api';
 import io from 'socket.io-client';
 import './Messages.css';
 
@@ -14,6 +14,7 @@ function Messages({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [acceptedConnections, setAcceptedConnections] = useState([]);
   
   // Compose form
   const [composeForm, setComposeForm] = useState({
@@ -54,6 +55,7 @@ function Messages({ user }) {
 
     fetchMessages();
     fetchUnreadCount();
+    fetchAcceptedConnections();
 
     return () => {
       if (socketRef.current) {
@@ -61,6 +63,15 @@ function Messages({ user }) {
       }
     };
   }, [user, navigate, activeTab]);
+
+  const fetchAcceptedConnections = async () => {
+    try {
+      const response = await connectionsAPI.getAccepted();
+      setAcceptedConnections(response.data.connections || []);
+    } catch (err) {
+      console.error('Error fetching accepted connections:', err);
+    }
+  };
 
   const fetchMessages = async () => {
     try {
@@ -314,15 +325,45 @@ function Messages({ user }) {
                 </div>
                 <form onSubmit={handleSendMessage} className="compose-form">
                   <div className="form-group">
-                    <label>Receiver ID:</label>
-                    <input
-                      type="text"
-                      value={composeForm.receiverId}
-                      onChange={(e) => setComposeForm({...composeForm, receiverId: e.target.value})}
-                      placeholder="Enter user ID"
-                      required
-                    />
-                    <small>Tip: Get user ID from their profile URL</small>
+                    <label>Send To (Accepted Connections Only):</label>
+                    {acceptedConnections.length === 0 ? (
+                      <div className="no-connections-message">
+                        <p>You don't have any accepted connections yet.</p>
+                        <small>Visit the Discover page to connect with other users first.</small>
+                      </div>
+                    ) : (
+                      <select
+                        value={composeForm.receiverId}
+                        onChange={(e) => {
+                          const selectedConnection = acceptedConnections.find(
+                            conn => conn.userId.toString() === e.target.value
+                          );
+                          const displayName = selectedConnection?.profile?.name || 
+                                            selectedConnection?.profile?.coupleName || 
+                                            selectedConnection?.user?.email || 
+                                            'Unknown User';
+                          setComposeForm({
+                            ...composeForm, 
+                            receiverId: e.target.value,
+                            receiverName: displayName
+                          });
+                        }}
+                        required
+                      >
+                        <option value="">-- Select a connection --</option>
+                        {acceptedConnections.map((connection) => {
+                          const displayName = connection.profile?.name || 
+                                            connection.profile?.coupleName || 
+                                            connection.user?.email || 
+                                            'Unknown User';
+                          return (
+                            <option key={connection.userId} value={connection.userId}>
+                              {displayName}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    )}
                   </div>
                   <div className="form-group">
                     <label>Subject:</label>

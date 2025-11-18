@@ -23,6 +23,30 @@ api.interceptors.request.use(
   }
 );
 
+// Handle response errors - auto logout on invalid token
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Token is invalid or expired
+      const errorMessage = error.response?.data?.message || '';
+      if (errorMessage.includes('Token') || errorMessage.includes('token') || 
+          errorMessage.includes('Invalid') || errorMessage.includes('Unauthorized')) {
+        // Clear invalid token and user data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // Redirect to login only if not already on login/register page
+        const currentPath = window.location.pathname;
+        if (currentPath !== '/login' && currentPath !== '/register' && currentPath !== '/') {
+          window.location.href = '/login';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth API
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),
@@ -80,6 +104,16 @@ export const messagesAPI = {
   deleteMessage: (id) => api.delete(`/messages/${id}`),
   markAsRead: (id) => api.patch(`/messages/${id}/read`),
   getUnreadCount: () => api.get('/messages/unread/count')
+};
+
+// Connections API
+export const connectionsAPI = {
+  sendRequest: (receiverId) => api.post(`/connections/send/${receiverId}`),
+  acceptRequest: (connectionId) => api.post(`/connections/accept/${connectionId}`),
+  rejectRequest: (connectionId) => api.post(`/connections/reject/${connectionId}`),
+  getStatus: (userId) => api.get(`/connections/status/${userId}`),
+  getPending: () => api.get('/connections/pending'),
+  getAccepted: () => api.get('/connections/accepted')
 };
 
 export default api;

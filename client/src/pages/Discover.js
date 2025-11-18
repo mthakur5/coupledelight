@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { discoverAPI } from '../utils/api';
+import { Link, useNavigate } from 'react-router-dom';
+import { discoverAPI, connectionsAPI } from '../utils/api';
 import './Discover.css';
 
 function Discover() {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [connectionStatuses, setConnectionStatuses] = useState({});
   const [filters, setFilters] = useState({
     minAge: '',
     maxAge: '',
     location: ''
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProfiles();
@@ -23,13 +25,67 @@ function Discover() {
       setError('');
       const response = await discoverAPI.getProfiles(filters);
       console.log('Discover API Response:', response.data);
-      setProfiles(response.data.profiles || []);
+      const fetchedProfiles = response.data.profiles || [];
+      setProfiles(fetchedProfiles);
+      
+      // Fetch connection status for each profile
+      if (fetchedProfiles.length > 0) {
+        fetchConnectionStatuses(fetchedProfiles);
+      }
     } catch (err) {
       console.error('Discover API Error:', err);
       setError(err.response?.data?.message || 'Failed to load profiles');
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchConnectionStatuses = async (profiles) => {
+    const statuses = {};
+    for (const profile of profiles) {
+      if (profile.userId && profile.userId._id) {
+        try {
+          const response = await connectionsAPI.getStatus(profile.userId._id);
+          statuses[profile.userId._id] = response.data;
+        } catch (err) {
+          console.error(`Error fetching status for ${profile.userId._id}:`, err);
+          statuses[profile.userId._id] = { status: 'none' };
+        }
+      }
+    }
+    setConnectionStatuses(statuses);
+  };
+
+  const handleConnect = async (e, userId) => {
+    e.preventDefault();
+    try {
+      await connectionsAPI.sendRequest(userId);
+      setConnectionStatuses(prev => ({
+        ...prev,
+        [userId]: { status: 'pending', isSender: true }
+      }));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to send connection request');
+    }
+  };
+
+  const handleAccept = async (e, connectionId, userId) => {
+    e.preventDefault();
+    try {
+      await connectionsAPI.acceptRequest(connectionId);
+      setConnectionStatuses(prev => ({
+        ...prev,
+        [userId]: { status: 'accepted' }
+      }));
+      alert('Connection accepted! You can now message this user.');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to accept connection');
+    }
+  };
+
+  const handleMessage = (e, userId) => {
+    e.preventDefault();
+    navigate('/messages', { state: { selectedUserId: userId } });
   };
 
   const handleFilterChange = (e) => {
@@ -193,6 +249,45 @@ function Discover() {
                         ))}
                         {profile.interests.length > 3 && (
                           <span className="interest-tag more">+{profile.interests.length - 3} more</span>
+                        )}
+                      </div>
+                    )}
+
+                    {profile.userId && (
+                      <div className="connection-actions">
+                        {connectionStatuses[profile.userId._id]?.status === 'none' && (
+                          <button 
+                            className="btn-connect"
+                            onClick={(e) => handleConnect(e, profile.userId._id)}
+                          >
+                            Connect
+                          </button>
+                        )}
+                        
+                        {connectionStatuses[profile.userId._id]?.status === 'pending' && 
+                         connectionStatuses[profile.userId._id]?.isSender && (
+                          <button className="btn-pending" disabled>
+                            Request Sent
+                          </button>
+                        )}
+                        
+                        {connectionStatuses[profile.userId._id]?.status === 'pending' && 
+                         !connectionStatuses[profile.userId._id]?.isSender && (
+                          <button 
+                            className="btn-accept"
+                            onClick={(e) => handleAccept(e, connectionStatuses[profile.userId._id].connection._id, profile.userId._id)}
+                          >
+                            Accept Request
+                          </button>
+                        )}
+                        
+                        {connectionStatuses[profile.userId._id]?.status === 'accepted' && (
+                          <button 
+                            className="btn-message"
+                            onClick={(e) => handleMessage(e, profile.userId._id)}
+                          >
+                            💬 Message
+                          </button>
                         )}
                       </div>
                     )}

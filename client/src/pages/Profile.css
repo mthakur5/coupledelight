@@ -875,3 +875,143 @@
     padding: 5px 12px;
   }
 }
+
+/* Connections Section */
+.connections-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px;
+  color: #6c757d;
+}
+
+.spinner-small {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #e0e0e0;
+  border-top-color: #8b7355;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+.connections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.connection-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.connection-item:hover {
+  background: #e9ecef;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.connection-avatar {
+  width: 50px;
+  height: 50px;
+  background: #8b7355;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.connection-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.connection-email {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connection-type {
+  font-size: 13px;
+  color: #6c757d;
+  margin-bottom: 2px;
+}
+
+.connection-date {
+  font-size: 12px;
+  color: #adb5bd;
+}
+
+.view-profile-btn {
+  background: #8b7355;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.3s ease;
+}
+
+.view-profile-btn:hover {
+  background: #6d5a45;
+}
+
+.no-connections {
+  text-align: center;
+  padding: 30px 15px;
+  background: #f8f9fa;
+  border-radius: 5px;
+  border: 2px dashed #dee2e6;
+}
+
+.no-connections .no-data-text {
+  margin-bottom: 15px;
+}
+
+.discover-btn-inline {
+  background: #8b7355;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.discover-btn-inline:hover {
+  background: #6d5a45;
+}
+
+@media (max-width: 480px) {
+  .connection-item {
+    flex-direction: column;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .connection-info {
+    text-align: center;
+  }
+
+  .view-profile-btn {
+    width: 100%;
+  }
+}
