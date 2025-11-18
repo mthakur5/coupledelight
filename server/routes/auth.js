@@ -99,9 +99,13 @@ router.post('/register', async (req, res) => {
     const profile = new Profile(profileData);
     await profile.save();
 
-    // Send verification email
+    // Send verification email (don't fail if email sending fails)
     const userName = accountType === 'single' ? name : `${partner1Name} & ${partner2Name}`;
-    await sendVerificationEmail(email, verificationToken, userName);
+    try {
+      await sendVerificationEmail(email, verificationToken, userName);
+    } catch (emailError) {
+      console.error('Email sending failed, but continuing registration:', emailError.message);
+    }
 
     // Generate JWT token
     const token = jwt.sign(
