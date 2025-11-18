@@ -319,10 +319,10 @@ function Messages({ user }) {
               >
                 <div className="conv-avatar">
                   {conv.profilePicture ? (
-                    <img src={conv.profilePicture} alt={conv.name} />
+                    <img src={conv.profilePicture} alt={conv.name || 'User'} />
                   ) : (
                     <div className="avatar-placeholder">
-                      {conv.name.charAt(0).toUpperCase()}
+                      {(conv.name || 'U').charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
@@ -352,10 +352,10 @@ function Messages({ user }) {
               <div className="chat-header-info">
                 <div className="header-avatar">
                   {selectedConversation.profilePicture ? (
-                    <img src={selectedConversation.profilePicture} alt={selectedConversation.name} />
+                    <img src={selectedConversation.profilePicture} alt={selectedConversation.name || 'User'} />
                   ) : (
                     <div className="avatar-placeholder">
-                      {selectedConversation.name.charAt(0).toUpperCase()}
+                      {(selectedConversation.name || 'U').charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
