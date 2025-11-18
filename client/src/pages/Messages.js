@@ -125,9 +125,11 @@ function Messages({ user }) {
   const fetchConversations = async () => {
     try {
       setLoading(true);
+      setError('');
+      
       const [inboxRes, sentRes] = await Promise.all([
-        messagesAPI.getInbox(),
-        messagesAPI.getSent()
+        messagesAPI.getInbox().catch(err => ({ data: { messages: [] } })),
+        messagesAPI.getSent().catch(err => ({ data: { messages: [] } }))
       ]);
 
       const allMessages = [
@@ -139,6 +141,8 @@ function Messages({ user }) {
       const conversationMap = new Map();
       
       allMessages.forEach(msg => {
+        if (!msg.sender || !msg.receiver) return; // Skip invalid messages
+        
         const otherUserId = msg.sender._id === user.id ? msg.receiver._id : msg.sender._id;
         const otherUser = msg.sender._id === user.id ? msg.receiver : msg.sender;
         const otherProfile = msg.sender._id === user.id ? msg.receiverProfile : msg.senderProfile;
@@ -146,9 +150,9 @@ function Messages({ user }) {
         if (!conversationMap.has(otherUserId)) {
           conversationMap.set(otherUserId, {
             userId: otherUserId,
-            email: otherUser.email,
-            name: otherProfile?.name || otherProfile?.coupleName || otherUser.email,
-            lastMessage: msg.message,
+            email: otherUser?.email || 'Unknown',
+            name: otherProfile?.name || otherProfile?.coupleName || otherUser?.email || 'Unknown',
+            lastMessage: msg.message || '',
             lastMessageTime: msg.createdAt,
             unread: msg.sender._id !== user.id && !msg.read ? 1 : 0,
             profilePicture: otherProfile?.profilePicture
@@ -156,7 +160,7 @@ function Messages({ user }) {
         } else {
           const conv = conversationMap.get(otherUserId);
           if (new Date(msg.createdAt) > new Date(conv.lastMessageTime)) {
-            conv.lastMessage = msg.message;
+            conv.lastMessage = msg.message || '';
             conv.lastMessageTime = msg.createdAt;
           }
           if (msg.sender._id !== user.id && !msg.read) {
@@ -171,7 +175,7 @@ function Messages({ user }) {
       setConversations(convArray);
     } catch (err) {
       console.error('Failed to load conversations:', err);
-      setError('Failed to load conversations');
+      setError('Could not load messages. Please check your connection.');
     } finally {
       setLoading(false);
     }
