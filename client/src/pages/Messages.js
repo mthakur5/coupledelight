@@ -223,42 +223,30 @@ function Messages({ user }) {
     if (!newMessage.trim() || !selectedConversation) return;
 
     const messageText = newMessage.trim();
-    const tempId = 'temp-' + Date.now();
     
-    // Optimistic update - show message immediately
-    const tempMessage = {
-      _id: tempId,
-      message: messageText,
-      sender: { _id: user.id },
-      receiver: { _id: selectedConversation.userId },
-      createdAt: new Date().toISOString(),
-      read: false
-    };
-    
-    setMessages(prev => [...prev, tempMessage]);
+    // Clear input immediately for better UX
     setNewMessage('');
-    scrollToBottom();
 
     try {
       setSending(true);
-      await messagesAPI.sendMessage({
+      
+      // Send message to backend
+      const response = await messagesAPI.sendMessage({
         receiverId: selectedConversation.userId,
         subject: 'Chat Message',
         message: messageText
       });
 
-      // Wait a bit longer for backend to process, then fetch real messages
+      // Wait a moment for backend to save, then refresh messages
       setTimeout(async () => {
         await fetchMessagesForConversation(selectedConversation.userId);
         await fetchConversations();
-        // Remove temp message after real ones are loaded
-        setMessages(prev => prev.filter(m => !m._id.toString().startsWith('temp-')));
-      }, 1000);
+      }, 800);
+      
     } catch (err) {
-      // Remove temp message on error
-      setMessages(prev => prev.filter(m => m._id !== tempId));
+      console.error('Failed to send message:', err);
       setError('Failed to send message');
-      setNewMessage(messageText);
+      setNewMessage(messageText); // Restore message on error
     } finally {
       setSending(false);
     }
