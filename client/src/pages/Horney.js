@@ -113,14 +113,12 @@ function Horney({ user }) {
               {acceptedConnections.length > 0 ? (
                 <div className="connections-grid">
                   {acceptedConnections.map((connection) => {
-                    // Safety check for undefined sender/receiver
-                    if (!connection.sender || !connection.receiver) {
+                    // Backend returns 'user' property, not 'sender'/'receiver'
+                    if (!connection.user) {
                       return null;
                     }
                     
-                    const otherUser = connection.sender._id === user._id 
-                      ? connection.receiver 
-                      : connection.sender;
+                    const otherUser = connection.user;
                     
                     return (
                       <div key={connection._id} className="connection-card">
@@ -144,7 +142,7 @@ function Horney({ user }) {
                               💬 Send Message
                             </button>
                             <button
-                              onClick={() => navigate(`/profile/${otherUser._id}`)}
+                              onClick={() => navigate(`/profile/${connection.userId}`)}
                               className="view-profile-btn-simple"
                             >
                               View Profile
