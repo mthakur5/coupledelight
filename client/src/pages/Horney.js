@@ -113,6 +113,11 @@ function Horney({ user }) {
               {acceptedConnections.length > 0 ? (
                 <div className="connections-grid">
                   {acceptedConnections.map((connection) => {
+                    // Safety check for undefined sender/receiver
+                    if (!connection.sender || !connection.receiver) {
+                      return null;
+                    }
+                    
                     const otherUser = connection.sender._id === user._id 
                       ? connection.receiver 
                       : connection.sender;
@@ -173,6 +178,11 @@ function Horney({ user }) {
               {pendingConnections.length > 0 ? (
                 <div className="connections-grid">
                   {pendingConnections.map((connection) => {
+                    // Safety check for undefined sender
+                    if (!connection.sender) {
+                      return null;
+                    }
+                    
                     const sender = connection.sender;
                     
                     return (
