@@ -28,77 +28,82 @@ function Messages({ user }) {
       return;
     }
 
-    // Try to initialize socket connection (will work in development, optional in production)
-    try {
-      const socketUrl = process.env.REACT_APP_API_URL 
-        ? process.env.REACT_APP_API_URL.replace('/api', '')
-        : 'http://localhost:5001';
-      
-      const socket = io(socketUrl, {
-        transports: ['websocket', 'polling'],
-        reconnection: true,
-        reconnectionAttempts: 3,
-        timeout: 5000
-      });
-      
-      socketRef.current = socket;
-      
-      socket.on('connect', () => {
-        console.log('Socket connected');
-        socket.emit('join', user.id);
-      });
+    let isMounted = true;
+    let socket = null;
+    let pollInterval = null;
 
-      socket.on('connect_error', (error) => {
-        console.log('Socket connection error (using polling fallback):', error.message);
-        // Fallback to polling
+    const initializeChat = async () => {
+      // Try to initialize socket connection (optional in production)
+      try {
+        const socketUrl = process.env.REACT_APP_API_URL 
+          ? process.env.REACT_APP_API_URL.replace('/api', '')
+          : 'http://localhost:5001';
+        
+        socket = io(socketUrl, {
+          transports: ['websocket', 'polling'],
+          reconnection: true,
+          reconnectionAttempts: 3,
+          timeout: 5000
+        });
+        
+        socketRef.current = socket;
+        
+        socket.on('connect', () => {
+          console.log('Socket connected');
+          socket.emit('join', user.id);
+        });
+
+        socket.on('connect_error', (error) => {
+          console.log('Socket connection error (using polling fallback):', error.message);
+          socketRef.current = null;
+        });
+
+        socket.on('newMessage', () => {
+          if (isMounted) fetchConversations();
+        });
+
+        socket.on('messageRead', () => {
+          if (isMounted) fetchConversations();
+        });
+      } catch (error) {
+        console.log('Socket.IO not available, using polling mode');
         socketRef.current = null;
-      });
-
-      // Listen for new messages
-      socket.on('newMessage', (data) => {
-        fetchConversations();
-        if (selectedConversation && data.senderId === selectedConversation.userId) {
-          fetchMessagesForConversation(selectedConversation.userId);
-        }
-      });
-
-      // Listen for message read events
-      socket.on('messageRead', () => {
-        fetchConversations();
-      });
-    } catch (error) {
-      console.log('Socket.IO not available, using polling mode');
-      socketRef.current = null;
-    }
-
-    fetchConversations();
-    fetchAcceptedConnections();
-
-    // Check if coming from another page with recipient info
-    if (location.state?.recipientId) {
-      const recipient = {
-        userId: location.state.recipientId,
-        email: location.state.recipientEmail,
-        name: location.state.recipientName
-      };
-      setSelectedConversation(recipient);
-      fetchMessagesForConversation(location.state.recipientId);
-    }
-
-    // Polling fallback - refresh conversations every 10 seconds if no socket
-    const pollInterval = setInterval(() => {
-      if (!socketRef.current || !socketRef.current.connected) {
-        fetchConversations();
       }
-    }, 10000);
+
+      // Fetch initial data
+      if (isMounted) {
+        await fetchConversations();
+        await fetchAcceptedConnections();
+
+        // Check if coming from another page with recipient info
+        if (location.state?.recipientId) {
+          const recipient = {
+            userId: location.state.recipientId,
+            email: location.state.recipientEmail,
+            name: location.state.recipientName
+          };
+          setSelectedConversation(recipient);
+          fetchMessagesForConversation(location.state.recipientId);
+        }
+      }
+
+      // Polling fallback - refresh every 10 seconds if no socket
+      pollInterval = setInterval(() => {
+        if (isMounted && (!socketRef.current || !socketRef.current.connected)) {
+          fetchConversations();
+        }
+      }, 10000);
+    };
+
+    initializeChat();
 
     return () => {
-      clearInterval(pollInterval);
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      isMounted = false;
+      if (pollInterval) clearInterval(pollInterval);
+      if (socket) socket.disconnect();
+      if (socketRef.current) socketRef.current.disconnect();
     };
-  }, [user, navigate]);
+  }, [user?.id]);
 
   useEffect(() => {
     scrollToBottom();
