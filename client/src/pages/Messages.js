@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { messagesAPI, connectionsAPI } from '../utils/api';
-import io from 'socket.io-client';
+import Pusher from 'pusher-js';
 import './Messages.css';
 
 function Messages({ user }) {
@@ -19,7 +19,7 @@ function Messages({ user }) {
   const [showNewChat, setShowNewChat] = useState(false);
   
   const messagesEndRef = useRef(null);
-  const socketRef = useRef(null);
+  const pusherRef = useRef(null);
   const messageInputRef = useRef(null);
 
   useEffect(() => {
@@ -29,45 +29,37 @@ function Messages({ user }) {
     }
 
     let isMounted = true;
-    let socket = null;
     let pollInterval = null;
 
     const initializeChat = async () => {
-      // Try to initialize socket connection (optional in production)
+      // Initialize Pusher for real-time messaging
       try {
-        const socketUrl = process.env.REACT_APP_API_URL 
-          ? process.env.REACT_APP_API_URL.replace('/api', '')
-          : 'http://localhost:5001';
-        
-        socket = io(socketUrl, {
-          transports: ['websocket', 'polling'],
-          reconnection: true,
-          reconnectionAttempts: 3,
-          timeout: 5000
+        const pusher = new Pusher('4c0410062699d310aa2f', {
+          cluster: 'ap2',
+          encrypted: true
         });
         
-        socketRef.current = socket;
+        pusherRef.current = pusher;
         
-        socket.on('connect', () => {
-          console.log('Socket connected');
-          socket.emit('join', user.id);
-        });
-
-        socket.on('connect_error', (error) => {
-          console.log('Socket connection error (using polling fallback):', error.message);
-          socketRef.current = null;
+        // Subscribe to user's private channel
+        const channel = pusher.subscribe(`user-${user.id}`);
+        
+        channel.bind('new-message', () => {
+          if (isMounted) {
+            fetchConversations();
+            if (selectedConversation) {
+              fetchMessagesForConversation(selectedConversation.userId);
+            }
+          }
         });
 
-        socket.on('newMessage', () => {
+        channel.bind('message-read', () => {
           if (isMounted) fetchConversations();
         });
 
-        socket.on('messageRead', () => {
-          if (isMounted) fetchConversations();
-        });
+        console.log('Pusher connected successfully');
       } catch (error) {
-        console.log('Socket.IO not available, using polling mode');
-        socketRef.current = null;
+        console.log('Pusher connection error:', error.message);
       }
 
       // Fetch initial data
@@ -87,12 +79,12 @@ function Messages({ user }) {
         }
       }
 
-      // Fast polling for real-time feel - refresh every 3 seconds
+      // Backup polling - every 5 seconds (Pusher handles real-time)
       pollInterval = setInterval(() => {
         if (isMounted) {
           fetchConversations();
         }
-      }, 3000);
+      }, 5000);
     };
 
     initializeChat();
@@ -100,8 +92,10 @@ function Messages({ user }) {
     return () => {
       isMounted = false;
       if (pollInterval) clearInterval(pollInterval);
-      if (socket) socket.disconnect();
-      if (socketRef.current) socketRef.current.disconnect();
+      if (pusherRef.current) {
+        pusherRef.current.unsubscribe(`user-${user.id}`);
+        pusherRef.current.disconnect();
+      }
     };
   }, [user?.id]);
 
@@ -124,7 +118,10 @@ function Messages({ user }) {
 
   const fetchConversations = async () => {
     try {
-      setLoading(true);
+      // Only show loading spinner on first load
+      if (conversations.length === 0) {
+        setLoading(true);
+      }
       setError('');
       
       const [inboxRes, sentRes] = await Promise.all([
@@ -137,12 +134,13 @@ function Messages({ user }) {
         ...(sentRes.data.messages || [])
       ];
 
-      // Group messages by conversation
+      // Group messages by conversation - FIXED: Prevents duplicate conversations
       const conversationMap = new Map();
       
       allMessages.forEach(msg => {
-        if (!msg.sender || !msg.receiver) return; // Skip invalid messages
+        if (!msg.sender || !msg.receiver) return;
         
+        // Always use OTHER user's ID as the key (not current user)
         const otherUserId = msg.sender._id === user.id ? msg.receiver._id : msg.sender._id;
         const otherUser = msg.sender._id === user.id ? msg.receiver : msg.sender;
         const otherProfile = msg.sender._id === user.id ? msg.receiverProfile : msg.senderProfile;
@@ -159,10 +157,12 @@ function Messages({ user }) {
           });
         } else {
           const conv = conversationMap.get(otherUserId);
+          // Update if this message is newer
           if (new Date(msg.createdAt) > new Date(conv.lastMessageTime)) {
             conv.lastMessage = msg.message || '';
             conv.lastMessageTime = msg.createdAt;
           }
+          // Count unread messages
           if (msg.sender._id !== user.id && !msg.read) {
             conv.unread += 1;
           }
@@ -175,7 +175,9 @@ function Messages({ user }) {
       setConversations(convArray);
     } catch (err) {
       console.error('Failed to load conversations:', err);
-      setError('Could not load messages. Please check your connection.');
+      if (conversations.length === 0) {
+        setError('Could not load messages. Please check your connection.');
+      }
     } finally {
       setLoading(false);
     }
@@ -206,10 +208,6 @@ function Messages({ user }) {
       conversationMessages.forEach(msg => {
         if (msg.sender._id === userId && !msg.read) {
           messagesAPI.markAsRead(msg._id).catch(console.error);
-          socketRef.current?.emit('messageRead', {
-            messageId: msg._id,
-            senderId: userId
-          });
         }
       });
 
@@ -242,13 +240,13 @@ function Messages({ user }) {
 
     try {
       setSending(true);
-      const response = await messagesAPI.sendMessage({
+      await messagesAPI.sendMessage({
         receiverId: selectedConversation.userId,
         subject: 'Chat Message',
         message: messageText
       });
 
-      // Replace temp message with real one
+      // Pusher will handle real-time update, but refresh after 500ms as backup
       setTimeout(() => {
         fetchMessagesForConversation(selectedConversation.userId);
         fetchConversations();

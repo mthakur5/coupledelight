@@ -20,7 +20,11 @@ function Navbar({ user, onLogout }) {
       const response = await connectionsAPI.getAccepted();
       setAcceptedCount(response.data.count || 0);
     } catch (error) {
-      console.error('Error fetching accepted count:', error);
+      // Silently fail if endpoint doesn't exist (not deployed yet)
+      if (error.response?.status !== 404) {
+        console.error('Error fetching accepted count:', error);
+      }
+      setAcceptedCount(0);
     }
   };
 

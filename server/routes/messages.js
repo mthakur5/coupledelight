@@ -3,6 +3,7 @@ const router = express.Router();
 const Message = require('../models/Message');
 const Profile = require('../models/Profile');
 const auth = require('../middleware/auth');
+const pusher = require('../utils/pusher');
 
 // Get inbox messages
 router.get('/inbox', auth, async (req, res) => {
@@ -125,6 +126,16 @@ router.post('/send', auth, async (req, res) => {
 
     await newMessage.save();
 
+    // Trigger Pusher event for real-time update
+    try {
+      await pusher.trigger(`user-${receiverId}`, 'new-message', {
+        messageId: newMessage._id,
+        senderId: req.user.id
+      });
+    } catch (err) {
+      console.error('Pusher error:', err);
+    }
+
     res.status(201).json({ 
       message: 'Message sent successfully',
       messageId: newMessage._id
@@ -183,6 +194,15 @@ router.patch('/:id/read', auth, async (req, res) => {
     message.read = true;
     message.readAt = new Date();
     await message.save();
+
+    // Trigger Pusher event for read receipt
+    try {
+      await pusher.trigger(`user-${message.sender}`, 'message-read', {
+        messageId: message._id
+      });
+    } catch (err) {
+      console.error('Pusher error:', err);
+    }
 
     res.json({ message: 'Message marked as read' });
   } catch (error) {
