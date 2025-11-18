@@ -18,6 +18,7 @@ const server = http.createServer(app);
 // CORS configuration for production
 const allowedOrigins = [
   'http://localhost:3000',
+  'https://coupledelight.com',
   'https://coupledelight.netlify.app',
   'https://loquacious-biscotti-fef5ac.netlify.app',
   process.env.CLIENT_URL
