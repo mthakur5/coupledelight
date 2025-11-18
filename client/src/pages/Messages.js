@@ -223,10 +223,11 @@ function Messages({ user }) {
     if (!newMessage.trim() || !selectedConversation) return;
 
     const messageText = newMessage.trim();
+    const tempId = 'temp-' + Date.now();
     
     // Optimistic update - show message immediately
     const tempMessage = {
-      _id: 'temp-' + Date.now(),
+      _id: tempId,
       message: messageText,
       sender: { _id: user.id },
       receiver: { _id: selectedConversation.userId },
@@ -246,14 +247,16 @@ function Messages({ user }) {
         message: messageText
       });
 
-      // Pusher will handle real-time update, but refresh after 500ms as backup
-      setTimeout(() => {
-        fetchMessagesForConversation(selectedConversation.userId);
-        fetchConversations();
-      }, 500);
+      // Wait a bit longer for backend to process, then fetch real messages
+      setTimeout(async () => {
+        await fetchMessagesForConversation(selectedConversation.userId);
+        await fetchConversations();
+        // Remove temp message after real ones are loaded
+        setMessages(prev => prev.filter(m => !m._id.toString().startsWith('temp-')));
+      }, 1000);
     } catch (err) {
       // Remove temp message on error
-      setMessages(prev => prev.filter(m => m._id !== tempMessage._id));
+      setMessages(prev => prev.filter(m => m._id !== tempId));
       setError('Failed to send message');
       setNewMessage(messageText);
     } finally {
