@@ -87,12 +87,12 @@ function Messages({ user }) {
         }
       }
 
-      // Polling fallback - refresh every 10 seconds if no socket
+      // Fast polling for real-time feel - refresh every 3 seconds
       pollInterval = setInterval(() => {
-        if (isMounted && (!socketRef.current || !socketRef.current.connected)) {
+        if (isMounted) {
           fetchConversations();
         }
-      }, 10000);
+      }, 3000);
     };
 
     initializeChat();
@@ -224,24 +224,40 @@ function Messages({ user }) {
     
     if (!newMessage.trim() || !selectedConversation) return;
 
+    const messageText = newMessage.trim();
+    
+    // Optimistic update - show message immediately
+    const tempMessage = {
+      _id: 'temp-' + Date.now(),
+      message: messageText,
+      sender: { _id: user.id },
+      receiver: { _id: selectedConversation.userId },
+      createdAt: new Date().toISOString(),
+      read: false
+    };
+    
+    setMessages(prev => [...prev, tempMessage]);
+    setNewMessage('');
+    scrollToBottom();
+
     try {
       setSending(true);
       const response = await messagesAPI.sendMessage({
         receiverId: selectedConversation.userId,
         subject: 'Chat Message',
-        message: newMessage.trim()
+        message: messageText
       });
 
-      socketRef.current?.emit('sendMessage', {
-        receiverId: selectedConversation.userId,
-        messageId: response.data.messageId
-      });
-
-      setNewMessage('');
-      fetchMessagesForConversation(selectedConversation.userId);
-      fetchConversations();
+      // Replace temp message with real one
+      setTimeout(() => {
+        fetchMessagesForConversation(selectedConversation.userId);
+        fetchConversations();
+      }, 500);
     } catch (err) {
+      // Remove temp message on error
+      setMessages(prev => prev.filter(m => m._id !== tempMessage._id));
       setError('Failed to send message');
+      setNewMessage(messageText);
     } finally {
       setSending(false);
     }
