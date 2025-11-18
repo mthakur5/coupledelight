@@ -28,24 +28,48 @@ function Messages({ user }) {
       return;
     }
 
-    // Initialize socket connection
-    const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:5001');
-    socketRef.current = socket;
-    
-    socket.emit('join', user.id);
+    // Try to initialize socket connection (will work in development, optional in production)
+    try {
+      const socketUrl = process.env.REACT_APP_API_URL 
+        ? process.env.REACT_APP_API_URL.replace('/api', '')
+        : 'http://localhost:5001';
+      
+      const socket = io(socketUrl, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 3,
+        timeout: 5000
+      });
+      
+      socketRef.current = socket;
+      
+      socket.on('connect', () => {
+        console.log('Socket connected');
+        socket.emit('join', user.id);
+      });
 
-    // Listen for new messages
-    socket.on('newMessage', (data) => {
-      fetchConversations();
-      if (selectedConversation && data.senderId === selectedConversation.userId) {
-        fetchMessagesForConversation(selectedConversation.userId);
-      }
-    });
+      socket.on('connect_error', (error) => {
+        console.log('Socket connection error (using polling fallback):', error.message);
+        // Fallback to polling
+        socketRef.current = null;
+      });
 
-    // Listen for message read events
-    socket.on('messageRead', () => {
-      fetchConversations();
-    });
+      // Listen for new messages
+      socket.on('newMessage', (data) => {
+        fetchConversations();
+        if (selectedConversation && data.senderId === selectedConversation.userId) {
+          fetchMessagesForConversation(selectedConversation.userId);
+        }
+      });
+
+      // Listen for message read events
+      socket.on('messageRead', () => {
+        fetchConversations();
+      });
+    } catch (error) {
+      console.log('Socket.IO not available, using polling mode');
+      socketRef.current = null;
+    }
 
     fetchConversations();
     fetchAcceptedConnections();
@@ -61,8 +85,18 @@ function Messages({ user }) {
       fetchMessagesForConversation(location.state.recipientId);
     }
 
+    // Polling fallback - refresh conversations every 10 seconds if no socket
+    const pollInterval = setInterval(() => {
+      if (!socketRef.current || !socketRef.current.connected) {
+        fetchConversations();
+      }
+    }, 10000);
+
     return () => {
-      if (socket) socket.disconnect();
+      clearInterval(pollInterval);
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
     };
   }, [user, navigate]);
 
