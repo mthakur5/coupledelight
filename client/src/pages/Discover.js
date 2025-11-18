@@ -20,10 +20,13 @@ function Discover() {
   const fetchProfiles = async () => {
     try {
       setLoading(true);
+      setError('');
       const response = await discoverAPI.getProfiles(filters);
-      setProfiles(response.data.profiles);
+      console.log('Discover API Response:', response.data);
+      setProfiles(response.data.profiles || []);
     } catch (err) {
-      setError('Failed to load profiles');
+      console.error('Discover API Error:', err);
+      setError(err.response?.data?.message || 'Failed to load profiles');
     } finally {
       setLoading(false);
     }
