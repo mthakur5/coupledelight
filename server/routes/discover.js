@@ -56,7 +56,7 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 
     const profiles = await Profile.find(query)
-      .select('-userId')
+      .populate('userId', 'email createdAt')
       .limit(50)
       .sort({ createdAt: -1 });
 

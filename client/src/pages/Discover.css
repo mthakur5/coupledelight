@@ -1,22 +1,24 @@
 .discover-page {
   min-height: calc(100vh - 70px);
   padding: 40px 20px;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .page-title {
-  font-size: 36px;
-  color: #333;
+  font-size: 42px;
+  color: white;
   text-align: center;
   margin-bottom: 30px;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .filters-section {
   background: white;
-  border-radius: 10px;
-  padding: 25px;
+  border-radius: 15px;
+  padding: 30px;
   margin-bottom: 30px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .filters-grid {
@@ -36,10 +38,17 @@
 .filter-group select,
 .filter-group input {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
   font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.filter-group input:focus {
+  border-color: #667eea;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .filter-buttons {
@@ -50,20 +59,24 @@
 
 .btn-apply,
 .btn-clear {
-  padding: 10px 30px;
-  border-radius: 8px;
+  padding: 12px 40px;
+  border-radius: 10px;
   font-weight: 600;
   transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
 }
 
 .btn-apply {
-  background-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 .btn-apply:hover {
-  background-color: #5568d3;
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
 .btn-clear {
@@ -73,6 +86,7 @@
 
 .btn-clear:hover {
   background-color: #e0e0e0;
+  transform: translateY(-2px);
 }
 
 .loading-message,
@@ -80,13 +94,24 @@
   text-align: center;
   padding: 60px 20px;
   font-size: 18px;
-  color: #666;
+  color: white;
+  font-weight: 500;
+}
+
+.error-message {
+  background-color: #ff4444;
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 .profiles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 30px;
+  padding: 10px;
 }
 
 .profile-card-link {
@@ -97,70 +122,202 @@
 
 .profile-card-discover {
   background: white;
-  border-radius: 15px;
-  padding: 25px;
-  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
 }
 
 .profile-card-discover:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Different card styles based on type */
+.card-couple {
+  border: 3px solid #ff6b9d;
+}
+
+.card-couple .card-header {
+  background: linear-gradient(135deg, #ff6b9d 0%, #c06c84 100%);
+}
+
+.card-male {
+  border: 3px solid #4facfe;
+}
+
+.card-male .card-header {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.card-female {
+  border: 3px solid #f093fb;
+}
+
+.card-female .card-header {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.card-header {
+  height: 200px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .profile-badge {
   position: absolute;
   top: 15px;
   right: 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  color: #333;
+  padding: 8px 16px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.profile-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  border: 5px solid white;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.image-blur {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  backdrop-filter: blur(15px);
+  border-radius: 50%;
+}
+
+.profile-image-placeholder {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 80px;
+  border: 5px solid white;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.card-content {
+  padding: 25px;
 }
 
 .profile-name {
-  font-size: 24px;
+  font-size: 26px;
+  font-weight: 700;
   margin-bottom: 8px;
   color: #333;
+  text-align: center;
 }
 
 .profile-age-gender {
   color: #666;
-  margin-bottom: 8px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
 }
 
-.profile-location {
-  color: #888;
-  margin-bottom: 12px;
+.couple-info {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.partner-names {
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.partner-ages {
   font-size: 14px;
+  color: #888;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #555;
+}
+
+.info-icon {
+  font-size: 18px;
+  min-width: 25px;
+  text-align: center;
+}
+
+.profile-email {
+  color: #667eea;
+  font-weight: 500;
+  word-break: break-all;
 }
 
 .profile-bio {
   color: #555;
   line-height: 1.6;
-  margin-bottom: 15px;
+  margin: 15px 0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  font-size: 14px;
+  font-style: italic;
 }
 
 .profile-interests {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 15px;
 }
 
 .interest-tag {
-  background-color: #f0f0f0;
-  color: #666;
-  padding: 5px 12px;
-  border-radius: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
   font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.interest-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+
+.interest-tag.more {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 @media (max-width: 768px) {
   .page-title {
-    font-size: 28px;
+    font-size: 32px;
   }
 
   .filters-grid {
@@ -169,6 +326,7 @@
 
   .profiles-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .filter-buttons {
@@ -178,5 +336,37 @@
   .btn-apply,
   .btn-clear {
     width: 100%;
+  }
+
+  .card-header {
+    height: 180px;
+  }
+
+  .profile-image,
+  .profile-image-placeholder {
+    width: 120px;
+    height: 120px;
+  }
+
+  .profile-image-placeholder {
+    font-size: 60px;
+  }
+
+  .profile-name {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .discover-page {
+    padding: 20px 10px;
+  }
+
+  .filters-section {
+    padding: 20px;
+  }
+
+  .card-content {
+    padding: 20px;
   }
 }

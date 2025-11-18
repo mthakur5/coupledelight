@@ -115,41 +115,85 @@ function Discover() {
                 key={profile._id}
                 className="profile-card-link"
               >
-                <div className="profile-card-discover">
-                  <div className="profile-badge">
-                    {profile.accountType === 'couple' ? '👫 Couple' : '💑 Single'}
-                  </div>
-                  <h3 className="profile-name">
-                    {profile.accountType === 'couple'
-                      ? profile.coupleName
-                      : profile.name}
-                  </h3>
-                  {profile.accountType === 'single' && (
-                    <p className="profile-age-gender">
-                      {profile.age} • {profile.gender}
-                    </p>
-                  )}
-                  {profile.accountType === 'couple' && (
-                    <p className="profile-age-gender">
-                      {profile.partner1?.name} & {profile.partner2?.name}
-                    </p>
-                  )}
-                  <p className="profile-location">
-                    📍 {profile.location?.city}, {profile.location?.country}
-                  </p>
-                  <p className="profile-bio">
-                    {profile.bio?.substring(0, 100)}
-                    {profile.bio?.length > 100 ? '...' : ''}
-                  </p>
-                  {profile.interests && profile.interests.length > 0 && (
-                    <div className="profile-interests">
-                      {profile.interests.slice(0, 3).map((interest, index) => (
-                        <span key={index} className="interest-tag">
-                          {interest}
-                        </span>
-                      ))}
+                <div className={`profile-card-discover ${profile.accountType === 'couple' ? 'card-couple' : profile.gender === 'male' ? 'card-male' : 'card-female'}`}>
+                  <div className="card-header">
+                    <div className="profile-badge">
+                      {profile.accountType === 'couple' ? '👫 Couple' : profile.gender === 'male' ? '👨 Boy' : '👩 Girl'}
                     </div>
-                  )}
+                    {profile.profilePicture && (
+                      <div className="profile-image" style={{backgroundImage: `url(${profile.profilePicture})`}}>
+                        {profile.profilePictureBlur && <div className="image-blur"></div>}
+                      </div>
+                    )}
+                    {!profile.profilePicture && (
+                      <div className="profile-image-placeholder">
+                        {profile.accountType === 'couple' ? '👫' : profile.gender === 'male' ? '👨' : '👩'}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="card-content">
+                    <h3 className="profile-name">
+                      {profile.accountType === 'couple'
+                        ? profile.coupleName
+                        : profile.name}
+                    </h3>
+                    
+                    {profile.accountType === 'single' && (
+                      <p className="profile-age-gender">
+                        {profile.age} years • {profile.gender === 'male' ? 'Male' : profile.gender === 'female' ? 'Female' : 'Other'}
+                      </p>
+                    )}
+                    
+                    {profile.accountType === 'couple' && (
+                      <div className="couple-info">
+                        <p className="partner-names">
+                          {profile.partner1?.name} & {profile.partner2?.name}
+                        </p>
+                        <p className="partner-ages">
+                          {profile.partner1?.age} & {profile.partner2?.age} years
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div className="info-row">
+                      <span className="info-icon">📍</span>
+                      <span>{profile.location?.city}, {profile.location?.country}</span>
+                    </div>
+                    
+                    {profile.userId && (
+                      <>
+                        <div className="info-row">
+                          <span className="info-icon">✉️</span>
+                          <span>{profile.userId.email}</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-icon">📅</span>
+                          <span>Joined {new Date(profile.userId.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </>
+                    )}
+                    
+                    {profile.bio && (
+                      <p className="profile-bio">
+                        {profile.bio?.substring(0, 100)}
+                        {profile.bio?.length > 100 ? '...' : ''}
+                      </p>
+                    )}
+                    
+                    {profile.interests && profile.interests.length > 0 && (
+                      <div className="profile-interests">
+                        {profile.interests.slice(0, 3).map((interest, index) => (
+                          <span key={index} className="interest-tag">
+                            {interest}
+                          </span>
+                        ))}
+                        {profile.interests.length > 3 && (
+                          <span className="interest-tag more">+{profile.interests.length - 3} more</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}

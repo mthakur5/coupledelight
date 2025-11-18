@@ -39,3 +39,7 @@ client/coverage
 .cache
 .temp
 uploads/
+.vercel
+
+# Local Netlify folder
+.netlify
